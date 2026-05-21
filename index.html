@@ -1,1 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GLOW & GRACE — Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --pink: #e8a0bf;
+      --deep-pink: #c76e9f;
+      --cream: #fdf6f0;
+      --gold: #c9a96e;
+      --dark: #2c2c2c;
+      --white: #ffffff;
+      --light-gray: #f5f0eb;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: var(--dark);
+      background: var(--white);
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { max-width: 100%; display: block; }
 
+    /* ===== LOADER ===== */
+    .loader {
+      position: fixed; inset: 0;
+      background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000;
+      transition: opacity .6s, visibility .6s;
+    }
+    .loader.hidden { opacity: 0; visibility: hidden; }
+    .loader-circle {
+      width: 50px; height: 50px;
+      border: 3px solid var(--pink);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== CURSOR ===== */
+    .cursor {
+      width: 20px; height: 20px;
+      border: 2px solid var(--deep-pink);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform .15s ease, opacity .15s;
+      mix-blend-mode: difference;
+    }
+    .cursor.active { transform: scale(2.5); opacity: .5; }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; width: 100%;
+      padding: 20px 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 1000;
+      transition: background .4s, box-shadow .4s, padding .4s;
+    }
+    .navbar.scrolled {
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 2px 30px rgba(0,0,0,.06);
+      padding: 14px 60px;
+      backdrop-filter: blur(10px);
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem; font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 36px; }
+    .nav-links a {
+      font-size: .85rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 2px;
+      position: relative; transition: color .3s;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute;
+      bottom: -4px; left: 0; width: 0; height: 1.5px;
+      background: var(--gold);
+      transition: width .3s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      padding: 10px 28px;
+      background: var(--dark);
+      color: var(--white);
+      border-radius: 30px;
+      font-size: .8rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 2px;
+      transition: background .3s, transform .3s;
+    }
+    .nav-cta:hover { background: var(--gold); transform: translateY(-2px); }
+
+    /* Hamburger */
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+    .hamburger span { width: 28px; height: 2px; background: var(--dark); transition: .3s; }
+    .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      background: linear-gradient(135deg, var(--cream) 0%, #fce4ec 50%, #f8e8d0 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -50%; right: -20%;
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(201,169,110,.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero-content {
+      max-width: 1400px; margin: 0 auto; padding: 120px 60px 80px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center; width: 100%;
+    }
+    .hero-text .tagline {
+      font-size: .8rem; text-transform: uppercase;
+      letter-spacing: 4px; color: var(--gold);
+      margin-bottom: 20px; font-weight: 500;
+    }
+    .hero-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1.15; margin-bottom: 24px;
+    }
+    .hero-text h1 em {
+      font-style: italic; color: var(--deep-pink);
+    }
+    .hero-text p {
+      font-size: 1.05rem; line-height: 1.8;
+      color: #666; margin-bottom: 40px; max-width: 480px;
+    }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 16px 40px;
+      background: var(--dark);
+      color: var(--white);
+      border: none; border-radius: 50px;
+      font-size: .85rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 2px;
+      cursor: pointer; transition: all .3s;
+    }
+    .btn-primary:hover { background: var(--gold); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(201,169,110,.3); }
+    .btn-outline {
+      padding: 16px 40px;
+      background: transparent;
+      color: var(--dark);
+      border: 1.5px solid var(--dark);
+      border-radius: 50px;
+      font-size: .85rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 2px;
+      cursor: pointer; transition: all .3s;
+    }
+    .btn-outline:hover { background: var(--dark); color: var(--white); }
+
+    .hero-image {
+      position: relative; display: flex; justify-content: center;
+    }
+    .hero-image-wrapper {
+      width: 450px; height: 550px;
+      border-radius: 200px 200px 30px 30px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,.1);
+      position: relative;
+    }
+    .hero-image-wrapper img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .floating-card {
+      position: absolute;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 16px 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.08);
+      animation: float 3s ease-in-out infinite;
+    }
+    .floating-card.card-1 { top: 10%; left: -40px; }
+    .floating-card.card-2 { bottom: 15%; right: -50px; animation-delay: 1.5s; }
+    .floating-card .number { font-size: 1.5rem; font-weight: 700; color: var(--gold); }
+    .floating-card .label { font-size: .75rem; color: #999; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* ===== MARQUEE ===== */
+    .marquee {
+      background: var(--dark);
+      padding: 18px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .marquee-inner {
+      display: inline-flex; gap: 60px;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-item {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--white);
+      letter-spacing: 3px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 60px;
+    }
+    .marquee-item::after { content: '✦'; color: var(--gold); }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ===== SECTION COMMON ===== */
+    section { padding: 100px 60px; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-header .tag {
+      font-size: .75rem; text-transform: uppercase;
+      letter-spacing: 4px; color: var(--gold);
+      font-weight: 500; margin-bottom: 12px;
+    }
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+    .section-header p {
+      max-width: 550px; margin: 16px auto 0;
+      color: #888; line-height: 1.7;
+    }
+
+    /* ===== SERVICES ===== */
+    .services { background: var(--light-gray); }
+    .services-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .service-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      transition: transform .4s, box-shadow .4s;
+      position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, var(--pink), var(--gold));
+      transform: scaleX(0);
+      transition: transform .4s;
+    }
+    .service-card:hover::before { transform: scaleX(1); }
+    .service-card:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,.08); }
+    .service-icon {
+      width: 70px; height: 70px;
+      background: linear-gradient(135deg, var(--cream), #fce4ec);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 1.8rem;
+    }
+    .service-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; margin-bottom: 12px;
+    }
+    .service-card p { color: #888; font-size: .9rem; line-height: 1.7; }
+    .service-card .price {
+      display: inline-block; margin-top: 16px;
+      font-weight: 600; color: var(--gold);
+      font-size: 1.1rem;
+    }
+
+    /* ===== ABOUT ===== */
+    .about {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+    }
+    .about-images { position: relative; }
+    .about-img-main {
+      width: 100%; border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.1);
+    }
+    .about-img-small {
+      position: absolute; bottom: -30px; right: -30px;
+      width: 200px; height: 200px;
+      border-radius: 20px;
+      border: 6px solid var(--white);
+      box-shadow: 0 10px 30px rgba(0,0,0,.1);
+      object-fit: cover;
+    }
+    .about-text .tag {
+      font-size: .75rem; text-transform: uppercase;
+      letter-spacing: 4px; color: var(--gold);
+      font-weight: 500; margin-bottom: 12px;
+    }
+    .about-text h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem; margin-bottom: 20px;
+    }
+    .about-text p { color: #777; line-height: 1.8; margin-bottom: 16px; }
+    .about-stats {
+      display: flex; gap: 40px; margin-top: 30px;
+    }
+    .stat h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem; color: var(--gold);
+    }
+    .stat p { font-size: .8rem; color: #999; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* ===== GALLERY ===== */
+    .gallery { background: var(--light-gray); }
+    .gallery-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 250px);
+      gap: 20px;
+    }
+    .gallery-item {
+      border-radius: 16px; overflow: hidden;
+      position: relative; cursor: pointer;
+    }
+    .gallery-item img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .6s;
+    }
+    .gallery-item:hover img { transform: scale(1.1); }
+    .gallery-item::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.4), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .gallery-item:hover::after { opacity: 1; }
+    .gallery-item:nth-child(1) { grid-row: span 2; }
+    .gallery-item:nth-child(4) { grid-row: span 2; }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonials { text-align: center; }
+    .testimonial-slider {
+      max-width: 700px; margin: 0 auto;
+      position: relative;
+    }
+    .testimonial-item {
+      display: none;
+      animation: fadeIn .5s ease;
+    }
+    .testimonial-item.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+    .testimonial-item .quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; font-style: italic;
+      line-height: 1.7; color: #555;
+      margin-bottom: 30px;
+    }
+    .testimonial-item .quote::before { content: '"'; color: var(--gold); font-size: 3rem; }
+    .testimonial-avatar {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      overflow: hidden;
+      border: 3px solid var(--gold);
+    }
+    .testimonial-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .testimonial-name { font-weight: 600; font-size: .95rem; }
+    .testimonial-role { font-size: .8rem; color: #999; }
+    .slider-dots {
+      display: flex; justify-content: center;
+      gap: 10px; margin-top: 30px;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: background .3s, transform .3s;
+    }
+    .dot.active { background: var(--gold); transform: scale(1.3); }
+
+    /* ===== BOOKING CTA ===== */
+    .booking-cta {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a1a2e 100%);
+      text-align: center;
+      color: var(--white);
+      position: relative; overflow: hidden;
+    }
+    .booking-cta::before {
+      content: '';
+      position: absolute; top: -50%; left: -20%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,169,110,.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .booking-cta h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      margin-bottom: 16px;
+    }
+    .booking-cta p { color: #aaa; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .booking-cta .btn-primary { background: var(--gold); color: var(--dark); }
+    .booking-cta .btn-primary:hover { background: var(--white); }
+
+    /* ===== INSTAGRAM FEED ===== */
+    .instagram { background: var(--light-gray); text-align: center; padding: 80px 60px; }
+    .insta-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px; max-width: 1200px; margin: 0 auto;
+    }
+    .insta-item {
+      aspect-ratio: 1; border-radius: 12px;
+      overflow: hidden; position: relative;
+    }
+    .insta-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .insta-item:hover img { transform: scale(1.1); }
+    .insta-item::after {
+      content: '♡';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.3);
+      color: white; font-size: 1.5rem;
+      opacity: 0; transition: opacity .3s;
+    }
+    .insta-item:hover::after { opacity: 1; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--dark);
+      color: var(--white);
+      padding: 80px 60px 30px;
+    }
+    .footer-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 60px;
+      margin-bottom: 60px;
+    }
+    .footer-brand .logo { font-size: 1.6rem; margin-bottom: 16px; }
+    .footer-brand p { color: #888; font-size: .9rem; line-height: 1.7; }
+    .footer-col h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; margin-bottom: 20px;
+    }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul li a { color: #888; font-size: .85rem; transition: color .3s; }
+    .footer-col ul li a:hover { color: var(--gold); }
+    .footer-social { display: flex; gap: 14px; margin-top: 20px; }
+    .footer-social a {
+      width: 40px; height: 40px;
+      border: 1px solid #444;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; transition: all .3s;
+    }
+    .footer-social a:hover { border-color: var(--gold); background: var(--gold); color: var(--dark); }
+    .footer-bottom {
+      border-top: 1px solid #333;
+      padding-top: 30px;
+      text-align: center;
+      color: #666; font-size: .8rem;
+    }
+
+    /* ===== SCROLL ANIMATIONS ===== */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity .8s ease, transform .8s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== BACK TO TOP ===== */
+    .back-to-top {
+      position: fixed; bottom: 30px; right: 30px;
+      width: 50px; height: 50px;
+      background: var(--gold);
+      color: var(--white);
+      border: none; border-radius: 50%;
+      font-size: 1.2rem; cursor: pointer;
+      opacity: 0; visibility: hidden;
+      transition: all .3s; z-index: 999;
+    }
+    .back-to-top.show { opacity: 1; visibility: visible; }
+    .back-to-top:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(201,169,110,.4); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .hero-content { grid-template-columns: 1fr; text-align: center; }
+      .hero-text p { margin-left: auto; margin-right: auto; }
+      .hero-buttons { justify-content: center; }
+      .hero-image { display: none; }
+      .about { grid-template-columns: 1fr; }
+      .about-img-small { right: 10px; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 200px); }
+      .gallery-item:nth-child(1), .gallery-item:nth-child(4) { grid-row: auto; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      section { padding: 60px 20px; }
+      .navbar { padding: 16px 20px; }
+      .navbar.scrolled { padding: 12px 20px; }
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .mobile-menu {
+        position: fixed; inset: 0;
+        background: var(--white);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 30px; z-index: 999;
+        transform: translateX(100%);
+        transition: transform .4s ease;
+      }
+      .mobile-menu.open { transform: translateX(0); }
+      .mobile-menu a { font-size: 1.3rem; font-weight: 500; text-transform: uppercase; letter-spacing: 3px; }
+      .insta-grid { grid-template-columns: repeat(3, 1fr); }
+      .footer-grid { grid-template-columns: 1fr; gap: 30px; }
+      .cursor { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div class="loader" id="loader"><div class="loader-circle"></div></div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <a href="#" class="logo">GLOW <span>&</span> GRACE</a>
+    <ul class="nav-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#testimonials">Reviews</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#booking" class="nav-cta">Book Now</a>
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#services" onclick="closeMobile()">Services</a>
+    <a href="#about" onclick="closeMobile()">About</a>
+    <a href="#gallery" onclick="closeMobile()">Gallery</a>
+    <a href="#testimonials" onclick="closeMobile()">Reviews</a>
+    <a href="#booking" onclick="closeMobile()">Book Now</a>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <div class="hero-text">
+        <p class="tagline">✦ Premium Beauty Studio</p>
+        <h1>Where <em>Beauty</em> Meets <em>Elegance</em></h1>
+        <p>Discover a sanctuary of self-care where expert stylists and premium products come together to reveal your most radiant self.</p>
+        <div class="hero-buttons">
+          <a href="#booking" class="btn-primary">Book Appointment</a>
+          <a href="#services" class="btn-outline">Explore Services</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="hero-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=750&fit=crop" alt="Beauty Studio" />
+        </div>
+        <div class="floating-card card-1">
+          <div class="number">5K+</div>
+          <div class="label">Happy Clients</div>
+        </div>
+        <div class="floating-card card-2">
+          <div class="number">4.9★</div>
+          <div class="label">Google Rating</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee">
+    <div class="marquee-inner">
+      <span class="marquee-item">Hair Styling</span>
+      <span class="marquee-item">Skincare</span>
+      <span class="marquee-item">Nail Art</span>
+      <span class="marquee-item">Makeup</span>
+      <span class="marquee-item">Spa & Wellness</span>
+      <span class="marquee-item">Bridal Packages</span>
+      <span class="marquee-item">Hair Styling</span>
+      <span class="marquee-item">Skincare</span>
+      <span class="marquee-item">Nail Art</span>
+      <span class="marquee-item">Makeup</span>
+      <span class="marquee-item">Spa & Wellness</span>
+      <span class="marquee-item">Bridal Packages</span>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <section class="services" id="services">
+    <div class="section-header reveal">
+      <p class="tag">What We Offer</p>
+      <h2>Our Premium Services</h2>
+      <p>From hair transformations to glowing skincare, we offer a full range of beauty treatments tailored just for you.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-icon">💇‍♀️</div>
+        <h3>Hair Styling</h3>
+        <p>Cuts, coloring, balayage, keratin treatments and more by our master stylists.</p>
+        <span class="price">From $65</span>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon">✨</div>
+        <h3>Skincare Facials</h3>
+        <p>HydraFacial, anti-aging, brightening and custom facials for radiant skin.</p>
+        <span class="price">From $85</span>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon">💅</div>
+        <h3>Nail Art & Care</h3>
+        <p>Gel manicures, nail art, extensions and luxurious spa pedicures.</p>
+        <span class="price">From $40</span>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon">💄</div>
+        <h3>Makeup Artistry</h3>
+        <p>Bridal, editorial, event and everyday makeup looks by pro artists.</p>
+        <span class="price">From $120</span>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon">🧖‍♀️</div>
+        <h3>Spa & Wellness</h3>
+        <p>Body wraps, hot stone massage, aromatherapy and detox treatments.</p>
+        <span class="price">From $95</span>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon">👰</div>
+        <h3>Bridal Packages</h3>
+        <p>Complete bridal beauty packages including hair, makeup and nail services.</p>
+        <span class="price">From $350</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <div class="about">
+      <div class="about-images reveal">
+        <img class="about-img-main" src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=700&fit=crop" alt="About Us" />
+        <img class="about-img-small" src="https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=300&h=300&fit=crop" alt="Our Team" />
+      </div>
+      <div class="about-text reveal">
+        <p class="tag">Our Story</p>
+        <h2>Beauty Is Our Passion</h2>
+        <p>Founded in 2018, Glow & Grace was born from a simple belief: everyone deserves to feel beautiful. Our team of certified beauty professionals brings together artistry and science to deliver transformative results.</p>
+        <p>We use only premium, cruelty-free products and stay at the forefront of beauty innovation to give you the very best experience.</p>
+        <div class="about-stats">
+          <div class="stat">
+            <h3>8+</h3>
+            <p>Years Experience</p>
+          </div>
+          <div class="stat">
+            <h3>5K+</h3>
+            <p>Happy Clients</p>
+          </div>
+          <div class="stat">
+            <h3>15+</h3>
+            <p>Expert Stylists</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="gallery" id="gallery">
+    <div class="section-header reveal">
+      <p class="tag">Our Portfolio</p>
+      <h2>Transformations & Artistry</h2>
+      <p>A glimpse into the beautiful results we create every day.</p>
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?w=500&h=700&fit=crop" alt="Gallery 1" />
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=500&h=400&fit=crop" alt="Gallery 2" />
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=500&h=400&fit=crop" alt="Gallery 3" />
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&h=700&fit=crop" alt="Gallery 4" />
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=500&h=400&fit=crop" alt="Gallery 5" />
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500&h=400&fit=crop" alt="Gallery 6" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="testimonials" id="testimonials">
+    <div class="section-header reveal">
+      <p class="tag">Client Love</p>
+      <h2>What Our Clients Say</h2>
+    </div>
+    <div class="testimonial-slider reveal">
+      <div class="testimonial-item active">
+        <p class="quote">Glow & Grace completely transformed my look. The team is incredibly talented and made me feel like a queen from the moment I walked in!</p>
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" alt="Client" />
+        </div>
+        <p class="testimonial-name">Sarah Mitchell</p>
+        <p class="testimonial-role">Regular Client</p>
+      </div>
+      <div class="testimonial-item">
+        <p class="quote">My bridal package was absolutely perfect. Every detail was taken care of and I looked exactly like the version of myself I always dreamed of.</p>
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Client" />
+        </div>
+        <p class="testimonial-name">Emily Rodriguez</p>
+        <p class="testimonial-role">Bride</p>
+      </div>
+      <div class="testimonial-item">
+        <p class="quote">The HydraFacial I received was life-changing. My skin has never looked this good. I'm a client for life!</p>
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Client" />
+        </div>
+        <p class="testimonial-name">Jessica Chen</p>
+        <p class="testimonial-role">Skincare Enthusiast</p>
+      </div>
+      <div class="slider-dots">
+        <span class="dot active" onclick="goToSlide(0)"></span>
+        <span class="dot" onclick="goToSlide(1)"></span>
+        <span class="dot" onclick="goToSlide(2)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking CTA -->
+  <section class="booking-cta" id="booking">
+    <div class="reveal">
+      <p class="tag" style="color: var(--gold); margin-bottom: 12px;">Ready to Glow?</p>
+      <h2>Book Your Transformation Today</h2>
+      <p>Step into our studio and let us create a beauty experience tailored exclusively for you.</p>
+      <a href="mailto:hello@glowandgrace.com" class="btn-primary">Schedule Appointment</a>
+    </div>
+  </section>
+
+  <!-- Instagram Feed -->
+  <section class="instagram">
+    <div class="section-header reveal">
+      <p class="tag">Follow Us</p>
+      <h2>@glowandgrace</h2>
+    </div>
+    <div class="insta-grid reveal">
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300&h=300&fit=crop" alt="Insta 1" /></div>
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=300&h=300&fit=crop" alt="Insta 2" /></div>
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=300&h=300&fit=crop" alt="Insta 3" /></div>
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=300&h=300&fit=crop" alt="Insta 4" /></div>
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=300&h=300&fit=crop" alt="Insta 5" /></div>
+      <div class="insta-item"><img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?w=300&h=300&fit=crop" alt="Insta 6" /></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">GLOW <span>&</span> GRACE</div>
+        <p>Your premier destination for beauty, wellness, and self-care. Where every visit is a transformation.</p>
+        <div class="footer-social">
+          <a href="#">𝕏</a>
+          <a href="#">𝐟</a>
+          <a href="#">📷</a>
+          <a href="#">𝐩</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#testimonials">Reviews</a></li>
+          <li><a href="#booking">Book Now</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#">Hair Styling</a></li>
+          <li><a href="#">Skincare</a></li>
+          <li><a href="#">Nail Art</a></li>
+          <li><a href="#">Makeup</a></li>
+          <li><a href="#">Bridal</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="#">123 Beauty Lane, Suite 4</a></li>
+          <li><a href="#">New York, NY 10001</a></li>
+          <li><a href="tel:+12125551234">+1 (212) 555-1234</a></li>
+          <li><a href="mailto:hello@glowandgrace.com">hello@glowandgrace.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Glow & Grace Beauty Studio. All rights reserved. Crafted with ♡</p>
+    </div>
+  </footer>
+
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0})">↑</button>
+
+  <script>
+    // Loader
+    window.addEventListener('load', () => {
+      setTimeout(() => document.getElementById('loader').classList.add('hidden'), 800);
+    });
+
+    // Custom Cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX - 10 + 'px';
+      cursor.style.top = e.clientY - 10 + 'px';
+    });
+    document.querySelectorAll('a, button, .service-card, .gallery-item, .insta-item, .dot').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+    });
+
+    // Navbar Scroll
+    const navbar = document.getElementById('navbar');
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+      backToTop.classList.toggle('show', window.scrollY > 500);
+    });
+
+    // Mobile Menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
+    });
+    function closeMobile() {
+      hamburger.classList.remove('active');
+      mobileMenu.classList.remove('open');
+    }
+
+    // Testimonial Slider
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.testimonial-item');
+    const dots = document.querySelectorAll('.dot');
+    function goToSlide(n) {
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].classList.remove('active');
+      currentSlide = n;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+    }
+    setInterval(() => {
+      goToSlide((currentSlide + 1) % slides.length);
+    }, 5000);
+
+    // Scroll Reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Counter Animation
+    const stats = document.querySelectorAll('.stat h3');
+    let counted = false;
+    const statsObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !counted) {
+        counted = true;
+        stats.forEach(stat => {
+          const text = stat.textContent;
+          const num = parseInt(text);
+          const suffix = text.replace(/[0-9]/g, '');
+          let current = 0;
+          const step = Math.ceil(num / 60);
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= num) { current = num; clearInterval(timer); }
+            stat.textContent = current + suffix;
+          }, 30);
+        });
+      }
+    }, { threshold: 0.5 });
+    if (stats.length) statsObserver.observe(stats[0].parentElement);
+  </script>
+</body>
+</html>
